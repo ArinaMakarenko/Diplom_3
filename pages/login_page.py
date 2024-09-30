@@ -1,41 +1,32 @@
 import allure
-
-from data_generator import generate_email, generate_password
-from locators.home_page_locators import PERSONAL_ACCOUNT
-from locators.login_page_locators import RECOVER_PASSWORD, EMAIL, PASSWORD, BUTTON_ENTER, ORDER_HISTORY, EXIT_ACCOUNT
+from locators.locators_login_page import LoginPageForm
+from locators.locators_login_page import LoginPageButtons
 from pages.base_page import BasePage
 
 
-class LoginPage(BasePage):
+class LoginPageBurger(BasePage):  # создали класс страницы входа в сервис
 
-    @allure.step('Открываем браузер Chrome')
     def __init__(self, driver):
-        super().__init__(driver)
+        self.driver = driver
 
-    @allure.step('Нажать на Восстановить пароль')
-    def click_to_recover_password(self):
-        self.click_to_element(RECOVER_PASSWORD)
+    @allure.step('Метод ожидания формы входа в сервис')
+    def wait_form_login(self: BasePage):
+        return self.wait_element_page(LoginPageForm.FORM_LOG)
 
-    @allure.step('Ввести адрес электронной почты в поле Email')
-    def input_email(self):
-        self.input_text(EMAIL, 'petergaas8126@yandex.ru')
+    @allure.step('Метод клика на кнопку "Восстановить пароль"')
+    def click_on_button_password_recovery(self: BasePage):
+        self.click_element_page(LoginPageButtons.PASS_REC)
 
-    @allure.step('Ввести пароль в поле Пароль')
-    def input_password(self):
-        self.input_text(PASSWORD, '123456')
+    @allure.step('Метод клика на кнопку показать/скрыть пароль')
+    def click_show_password(self: BasePage):
+        self.click_element_page(LoginPageForm.SHOW_PASS_ICON)
 
-    @allure.step('Нажать на кнопку Войти')
-    def click_button_enter(self):
-        self.click_to_element(BUTTON_ENTER)
+    @allure.step('Метод отображения активного поля "Пароль"')
+    def wait_active_password_field(self: BasePage):
+        return self.wait_element_page(LoginPageForm.ACTIVE_PASS_FIELD)
 
-    @allure.step('Нажать на кнопку Лента Заказов')
-    def click_to_order_history(self):
-        self.click_to_element(ORDER_HISTORY)
-
-    @allure.step('Нажать на Личный Кабинет')
-    def click_to_personal_account(self):
-        self.click_to_element(PERSONAL_ACCOUNT)
-
-    @allure.step('Нажать на кнопку Выход')
-    def click_to_exit_account(self):
-        self.click_to_element(EXIT_ACCOUNT)
+    @allure.step('Метод входа в сервис нового пользователя')
+    def completion_fields_login_and_password_and_log_user(self: BasePage, data_user):
+        self.send_keys_element(LoginPageForm.FIELD_EMAIL_LOG, f'{data_user[1]}')
+        self.send_keys_element(LoginPageForm.FIELD_PASS_LOG, f'{data_user[2]}')
+        self.click_execute_element_page(LoginPageButtons.ENTER_ACC_USER)

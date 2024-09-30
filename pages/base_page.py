@@ -1,41 +1,42 @@
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.wait import WebDriverWait as Wait
+import allure
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.action_chains import ActionChains
+from seletools.actions import drag_and_drop
 
 
-class BasePage:
-
+class BasePage:  # создали класс базовых методов selenium
     def __init__(self, driver):
         self.driver = driver
 
-    def scroll_to_element(self, element):
-        self.driver.execute_script("arguments[0].scrollIntoView(true);", self.driver.find_element(*element))
+    @allure.step('Метод получения текста элемента')
+    def base_text_element(self, locator):
+        return self.driver.find_element(*locator).text
 
-    def click_to_element(self, element):
-        self.driver.find_element(*element).click()
+    @allure.step('Метод явного ожидания отображения элемента')
+    def wait_element_page(self, locator):
+        return WebDriverWait(self.driver, 10).until(expected_conditions.visibility_of_all_elements_located(locator))
 
-    def get_text_from_element(self, element):
-        return self.driver.find_element(*element).text
+    @allure.step('Метод обратного ожидания(отсутствия элемента). Используется для отображения id заказа')
+    def re_wait_element_page(self, locator, text):
+        return WebDriverWait(self.driver, 10).until_not(expected_conditions.text_to_be_present_in_element(locator, text))
 
-    def input_text(self, element, text):
-        return self.driver.find_element(*element).send_keys(text)
+    @allure.step('Метод клика "ActionChains" по элементу страницы')
+    def click_element_page(self, locator):
+        element = BasePage.wait_element_page(self, locator)
+        ActionChains(self.driver).move_to_element(*element).click().perform()
 
-    def find_element(self, element):
-        return self.driver.find_element(*element)
+    @allure.step('Метод клика "ExecuteScript" по элементу. Используется для клика по кнопке "Вход" в форме входа user')
+    def click_execute_element_page(self, locator):
+        element = self.driver.find_element(*locator)
+        self.driver.execute_script("arguments[0].click();", element)
 
-    def get_current_url(self):
-        return self.driver.current_url
+    @allure.step('Метод ввода текста в поле элемента страницы')
+    def send_keys_element(self, locator, text):
+        return self.driver.find_element(*locator).send_keys(text)
 
-    def switch_to_window_next_tab(self):
-        self.driver.switch_to.window(self.driver.window_handles[1])
-
-    def wait_url_contains(self, url):
-        Wait(self.driver, 10).until(EC.url_contains(url))
-
-    def wait_element_to_be_clickable(self, element):
-        Wait(self.driver, 10).until(EC.element_to_be_clickable(element))
-
-    def element_to_be_present_in_page(self, element):
-        Wait(self.driver, 10).until(EC.presence_of_element_located(element))
-
-    def text_to_be_present_in_element_attribute(self, element, attribute, text):
-        Wait(self.driver, 10).until(EC.text_to_be_present_in_element_attribute(element, attribute, text))
+    @allure.step('Метод перетаскивания ингредиента в заказ')
+    def dragging_an_ingredient(self, locator_source, locator_target):
+        source = self.driver.find_element(*locator_source)
+        target = self.driver.find_element(*locator_target)
+        drag_and_drop(self.driver, source, target)
